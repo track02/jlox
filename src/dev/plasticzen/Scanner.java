@@ -90,8 +90,34 @@ public class Scanner {
             case ' ', '\r', '\t' -> {}
             // Increment line counter for a new line
             case '\n' -> line++;
+            // String handling
+            case '"' -> string();
             default -> Lox.error(line, "Unexpected Character");
         }
+    }
+
+    /**
+     * Repeatedly looks ahead until terminating " is found
+     * When end of string is found trims "'s, extracts value
+     * and generates a new token
+     */
+    private void string() {
+        while (peek() != '"' && !isAtEnd()){
+            if (peek() == '\n') line++;
+            advance();
+        }
+
+        if (isAtEnd()){
+            Lox.error(line, "Unterminated string");
+            return;
+        }
+
+        // The closing "
+        advance();
+
+        // Trim surrounding quotes
+        String value = source.substring(start + 1, current - 1);
+        addToken(STRING, value);
     }
 
     /**
