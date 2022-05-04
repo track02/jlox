@@ -70,11 +70,26 @@ public class Scanner {
             case '+' -> addToken(PLUS);
             case ';' -> addToken(SEMICOLON);
             case '*' -> addToken(STAR);
+            // '/' is a special case as it can be used for comments and division
+            case '/' -> {
+                // Comment
+                if (match('/')) {
+                    // A comment continues until the end of the line
+                    // Note we do not generate a token for a comment, it's skipped over
+                    while (peek() != '\n' && !isAtEnd()) advance();
+                } else {
+                    addToken(SLASH);
+                }
+            }
             // Second character lexemes, look at next character and check
             case '!' -> addToken(match('=') ? BANG_EQUAL : BANG);
             case '=' -> addToken(match('=') ? EQUAL_EQUAL : EQUAL);
             case '<' -> addToken(match('=') ? LESS_EQUAL : LESS);
             case '>' -> addToken(match('=') ? GREATER_EQUAL : GREATER);
+            // Skip over meaningless characters
+            case ' ', '\r', '\t' -> {}
+            // Increment line counter for a new line
+            case '\n' -> line++;
             default -> Lox.error(line, "Unexpected Character");
         }
     }
@@ -92,6 +107,16 @@ public class Scanner {
         // Don't advance unless it's a match
         current++;
         return true;
+    }
+
+    /**
+     * Peek is a helper method, similar to advance but doesn't consume
+     * the character - one character of lookahead
+     * @return - the current character
+     */
+    private char peek() {
+        if (isAtEnd()) return '\0';
+        return source.charAt(current);
     }
 
     /**
