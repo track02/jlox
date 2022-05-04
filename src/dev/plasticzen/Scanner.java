@@ -52,4 +52,51 @@ public class Scanner {
         return current >= source.length();
     }
 
+    /**
+     * Scans source code, finds next lexeme and generates token
+     * Unrecognised characters result in error
+     */
+    private void scanToken() {
+        char c = advance();
+        switch (c) {
+            case '(' -> addToken(LEFT_PAREN);
+            case ')' -> addToken(RIGHT_PAREN);
+            case '{' -> addToken(LEFT_BRACE);
+            case '}' -> addToken(RIGHT_BRACE);
+            case ',' -> addToken(COMMA);
+            case '.' -> addToken(DOT);
+            case '-' -> addToken(MINUS);
+            case '+' -> addToken(PLUS);
+            case ';' -> addToken(SEMICOLON);
+            case '*' -> addToken(STAR);
+            default -> Lox.error(line, "Unexpected Character");
+        }
+    }
+
+    /**
+     * Advances through the source and returns next character
+     * @return - Next character of source
+     */
+    private char advance(){
+        return source.charAt(current++);
+    }
+
+    /**
+     * Used to create non-literal tokens, passes to overloaded method with null literal
+     * @param type - Token Type (enum)
+     */
+    private void addToken(TokenType type){
+        addToken(type, null);
+    }
+
+    /**
+     * Generates a token using start and current indexes to extract substring of source
+     * @param type - Token type (enum)
+     * @param literal - Literal value if appropriate
+     */
+    private void addToken(TokenType type, Object literal){
+        String text = source.substring(start, current);
+        tokens.add(new Token(type, text, literal, line));
+    }
+
 }
