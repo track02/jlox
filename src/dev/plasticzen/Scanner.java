@@ -104,36 +104,7 @@ public class Scanner {
                     // Note we do not generate a token for a comment, it's skipped over
                     while (peek() != '\n' && !isAtEnd()) advance();
                 } else if (match('*')) {
-                    // Multi line comment start
-                    // Need to continue until reaching */
-
-                    /*/
-                    hello**hello
-                     */
-
-                    // Advance past opening * into comment
-                    advance();
-
-                    // Capture first character
-                    int open_comments = 1;
-                    char last_char = source.charAt(current);
-
-                    // Advance again and begin loop
-                    advance();
-
-                    while (open_comments > 0) {
-
-                        // Account for multi line comments
-                        if (peek() == '\n') line++;
-                        if (last_char == '/' && peek() == '*') open_comments++;
-                        if (last_char == '*' && peek() == '/') open_comments--;
-
-                        // Capture last character
-                        last_char = source.charAt(current);
-                        advance();
-
-                    }
-                    
+                    multiLineComment();
                 } else {
                     // Division operator
                     addToken(SLASH);
@@ -224,6 +195,44 @@ public class Scanner {
         // Trim surrounding quotes
         String value = source.substring(start + 1, current - 1);
         addToken(STRING, value);
+    }
+
+    /**
+     * Advances through a multiple line comment
+     * Assumes current is at first character of comment
+     * Handles nesting and new lines
+     */
+    private void multiLineComment(){
+
+        // Current is already at first character of comment, capture this character
+        int open_comments = 1;
+        System.out.println("[Open found] Total open comments: " + open_comments);
+
+        char last_char = source.charAt(current);
+
+        // Advance to next character and begin loop
+        advance();
+
+        while (open_comments > 0 ) {
+
+            // Account for multi line comments
+            if (peek() == '\n') {
+                line++;
+                System.out.println("[New Line in comment] Current line: " + line);
+            }
+            if (last_char == '/' && peek() == '*') {
+                open_comments++;
+                System.out.println("[Open found] Total open comments: " + open_comments);
+            }
+            if (last_char == '*' && peek() == '/') {
+                open_comments--;
+                System.out.println("[Close found] Total open comments: " + open_comments);
+            }
+
+            // Capture last character
+            last_char = source.charAt(current);
+            if (!isAtEnd()) advance();
+        }
     }
 
     /**

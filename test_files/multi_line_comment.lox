@@ -1,0 +1,9 @@
+/* This is a multi
+    line comment
+    /* With two levels
+        /* of nested comments */
+    */
+*/
+
+var x = 100
+var y = 200
