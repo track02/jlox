@@ -12,10 +12,36 @@ import static dev.plasticzen.TokenType.*;
  * working through from start to end and generating tokens
  * for each lexeme present
  */
+
+
+
+
 public class Scanner {
 
     private final String source; // Raw source code
     private final List<Token> tokens = new ArrayList<>(); // Empty list of tokens, populated after scan
+
+    // Keyword map
+    private static final Map<String, TokenType> keywords;
+    static {
+        keywords = new HashMap<>();
+        keywords.put("and",    AND);
+        keywords.put("class",  CLASS);
+        keywords.put("else",   ELSE);
+        keywords.put("false",  FALSE);
+        keywords.put("for",    FOR);
+        keywords.put("fun",    FUN);
+        keywords.put("if",     IF);
+        keywords.put("nil",    NIL);
+        keywords.put("or",     OR);
+        keywords.put("print",  PRINT);
+        keywords.put("return", RETURN);
+        keywords.put("super",  SUPER);
+        keywords.put("this",   THIS);
+        keywords.put("true",   TRUE);
+        keywords.put("var",    VAR);
+        keywords.put("while",  WHILE);
+    }
     private int start = 0; // Index of first character in lexeme
     private int current = 0; // Index of current character being considered
     private int line = 1; // Tracks line of source code being scanned
@@ -90,10 +116,58 @@ public class Scanner {
             case ' ', '\r', '\t' -> {}
             // Increment line counter for a new line
             case '\n' -> line++;
-            // String handling
+            // String lexeme handling
             case '"' -> string();
-            default -> Lox.error(line, "Unexpected Character");
+            default -> {
+                // Number lexemes
+                if (isDigit(c)) {
+                    number();
+                } else if (isAlpha(c)) {
+                    identifier();
+                } else {
+                // Unrecognised characters
+                    Lox.error(line, "Unexpected Character");
+                }
+            }
         }
+    }
+
+    /**
+     * Repeatedly advances ahead until a complete identifier is found (alphanumeric lexeme)
+     * and generates appropriate token
+     */
+    private void identifier(){
+        while (isAlphaNumeric(peek())) advance();
+
+        // Identifier has been scanned in, extract text
+        String text = source.substring(start, current);
+
+        // Check keywords if this identifier is reserved
+        TokenType type = keywords.get(text);
+        if (type == null) type = IDENTIFIER; // If not a keyword, lookup returns null
+        addToken(type);
+    }
+
+    /**
+     * Repeatedly looks ahead until a complete number is found
+     * either integer or fractional and generates appropriate token
+     */
+    private void number(){
+
+        // Consumes as many digits that make up the integer part of number and advance current
+        while (isDigit(peek())) advance();
+
+        // Look for a fractional part, continue advancing only if a digit is *after* the decimal point
+        if (peek() == '.' && isDigit(peekNext())) {
+            // Consume '.', advancing current
+            advance();
+
+            // Consume as many digits that make up the fractional part of number advancing current
+            while (isDigit(peek())) advance();
+        }
+
+        // Current now points at the 'last' digit in the number, create a token
+        addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
     }
 
     /**
@@ -124,7 +198,7 @@ public class Scanner {
      * Conditional advance, the current character is only consumed if it matches
      * with the expected character
      * @param expected - Expected character to match
-     * @return
+     * @return - true if characters match otherwise false
      */
     private boolean match(char expected) {
         if (isAtEnd()) return false;
@@ -143,6 +217,46 @@ public class Scanner {
     private char peek() {
         if (isAtEnd()) return '\0';
         return source.charAt(current);
+    }
+
+    /**
+     * peekNext returns the character *after* current
+     * @return - the current following current
+     */
+    private char peekNext() {
+        if (current + 1 >= source.length()) return '\0';
+        return source.charAt(current + 1);
+    }
+
+    /**
+     * Helper method which checks if a given character
+     * is an alphabetical character (+ underscore)
+     * @param c - character to check
+     * @return - bool, true if alphabetical/underscore otherwise false
+     */
+    private boolean isAlpha(char c) {
+        return (c >= 'a' && c <= 'z') ||
+               (c >= 'A' && c <= 'Z') ||
+               c == '_';
+    }
+
+    /**
+     * Helper method combining isAlpha and isDigit
+     * to check for alphanumeric character
+     * @param c - character to check
+     * @return - bool, true if alphanumeric, otherwise false
+     */
+    private boolean isAlphaNumeric(char c) {
+        return isAlpha(c) || isDigit(c);
+    }
+
+    /**
+     * Helper method which checks if given character is a number
+     * @param c - character to check
+     * @return - bool, true if digit false otherwise
+     */
+    private boolean isDigit(char c){
+        return c >= '0' && c <= '9';
     }
 
     /**
