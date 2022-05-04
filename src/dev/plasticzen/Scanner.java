@@ -59,6 +59,7 @@ public class Scanner {
     private void scanToken() {
         char c = advance();
         switch (c) {
+            // Single character lexemes
             case '(' -> addToken(LEFT_PAREN);
             case ')' -> addToken(RIGHT_PAREN);
             case '{' -> addToken(LEFT_BRACE);
@@ -69,12 +70,33 @@ public class Scanner {
             case '+' -> addToken(PLUS);
             case ';' -> addToken(SEMICOLON);
             case '*' -> addToken(STAR);
+            // Second character lexemes, look at next character and check
+            case '!' -> addToken(match('=') ? BANG_EQUAL : BANG);
+            case '=' -> addToken(match('=') ? EQUAL_EQUAL : EQUAL);
+            case '<' -> addToken(match('=') ? LESS_EQUAL : LESS);
+            case '>' -> addToken(match('=') ? GREATER_EQUAL : GREATER);
             default -> Lox.error(line, "Unexpected Character");
         }
     }
 
     /**
+     * Conditional advance, the current character is only consumed if it matches
+     * with the expected character
+     * @param expected - Expected character to match
+     * @return
+     */
+    private boolean match(char expected) {
+        if (isAtEnd()) return false;
+        if (source.charAt(current) != expected) return false;
+
+        // Don't advance unless it's a match
+        current++;
+        return true;
+    }
+
+    /**
      * Advances through the source and returns next character
+     * Current is then increment in preparation for next advance
      * @return - Next character of source
      */
     private char advance(){
