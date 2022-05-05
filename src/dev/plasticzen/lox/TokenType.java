@@ -1,4 +1,4 @@
-package dev.plasticzen;
+package dev.plasticzen.lox;
 
 /**
  * Enum used to identify tokens, the meaningful/known elements that make up the language

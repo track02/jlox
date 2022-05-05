@@ -1,19 +1,17 @@
-package dev.plasticzen;
+package dev.plasticzen.lox;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static dev.plasticzen.TokenType.*;
+import static dev.plasticzen.lox.TokenType.*;
 
 /*
  * Scanner operates on a string of source code
  * working through from start to end and generating tokens
  * for each lexeme present
  */
-
-
 
 
 public class Scanner {
@@ -97,16 +95,7 @@ public class Scanner {
             case ';' -> addToken(SEMICOLON);
             case '*' -> addToken(STAR);
             // '/' is a special case as it can be used for comments and division
-            case '/' -> {
-                // Comment
-                if (match('/')) {
-                    // A comment continues until the end of the line
-                    // Note we do not generate a token for a comment, it's skipped over
-                    while (peek() != '\n' && !isAtEnd()) advance();
-                } else {
-                    addToken(SLASH);
-                }
-            }
+            case '/' -> slash();
             // Second character lexemes, look at next character and check
             case '!' -> addToken(match('=') ? BANG_EQUAL : BANG);
             case '=' -> addToken(match('=') ? EQUAL_EQUAL : EQUAL);
@@ -192,6 +181,58 @@ public class Scanner {
         // Trim surrounding quotes
         String value = source.substring(start + 1, current - 1);
         addToken(STRING, value);
+    }
+
+    /**
+     * Handles a slash character, determining if division operator, single line comment or multiline
+     * Assumes current is at first character of comment
+     * Handles nesting and new lines
+     */
+    private void slash(){
+
+        // Comment - Single Line, continue advancing until end of the line
+        if (match('/')) {
+            while (peek() != '\n' && !isAtEnd()) advance();
+
+        // Multiline Comment
+        } else if (match('*')) {
+
+            int open_comments = 1;
+            System.out.println("[Open found] Total open comments: " + open_comments);
+
+            char last_char = source.charAt(current);
+
+            // Advance to next character and begin loop
+            advance();
+
+            while (open_comments > 0) {
+
+                // Account for multi line comments
+                if (peek() == '\n') {
+                    line++;
+                    System.out.println("[New Line in comment] Current line: " + line);
+                }
+                if (last_char == '/' && peek() == '*') {
+                    open_comments++;
+                    System.out.println("[Open found] Total open comments: " + open_comments);
+                }
+                if (last_char == '*' && peek() == '/') {
+                    open_comments--;
+                    System.out.println("[Close found] Total open comments: " + open_comments);
+                }
+
+                // Capture last character
+                if (!isAtEnd()){
+                    last_char = source.charAt(current);
+                    advance();
+                }
+                else {Lox.error(line, "Unclosed comment"); break;}
+            }
+        } else {
+
+        // Division operator
+        addToken(SLASH);
+        }
     }
 
     /**

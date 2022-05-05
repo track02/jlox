@@ -1,4 +1,4 @@
-package dev.plasticzen;
+package dev.plasticzen.lox;
 
 /*
  * Scanner produces tokens which bundle substrings of the source code

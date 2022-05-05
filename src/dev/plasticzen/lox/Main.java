@@ -1,4 +1,4 @@
-package dev.plasticzen;
+package dev.plasticzen.lox;
 
 import java.io.Console;
 
