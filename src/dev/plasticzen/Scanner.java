@@ -97,19 +97,7 @@ public class Scanner {
             case ';' -> addToken(SEMICOLON);
             case '*' -> addToken(STAR);
             // '/' is a special case as it can be used for comments and division
-            case '/' -> {
-                // Comment - Single Line
-                if (match('/')) {
-                    // A comment continues until the end of the line
-                    // Note we do not generate a token for a comment, it's skipped over
-                    while (peek() != '\n' && !isAtEnd()) advance();
-                } else if (match('*')) {
-                    multiLineComment();
-                } else {
-                    // Division operator
-                    addToken(SLASH);
-                }
-            }
+            case '/' -> slash();
             // Second character lexemes, look at next character and check
             case '!' -> addToken(match('=') ? BANG_EQUAL : BANG);
             case '=' -> addToken(match('=') ? EQUAL_EQUAL : EQUAL);
@@ -198,42 +186,54 @@ public class Scanner {
     }
 
     /**
-     * Advances through a multiple line comment
+     * Handles a slash character, determining if division operator, single line comment or multiline
      * Assumes current is at first character of comment
      * Handles nesting and new lines
      */
-    private void multiLineComment(){
+    private void slash(){
 
-        // Current is already at first character of comment, capture this character
-        int open_comments = 1;
-        System.out.println("[Open found] Total open comments: " + open_comments);
+        // Comment - Single Line, continue advancing until end of the line
+        if (match('/')) {
+            while (peek() != '\n' && !isAtEnd()) advance();
 
-        char last_char = source.charAt(current);
+        } else if (match('*')) {
 
-        // Advance to next character and begin loop
-        advance();
+            int open_comments = 1;
+            System.out.println("[Open found] Total open comments: " + open_comments);
 
-        while (open_comments > 0 ) {
+            char last_char = source.charAt(current);
 
-            // Account for multi line comments
-            if (peek() == '\n') {
-                line++;
-                System.out.println("[New Line in comment] Current line: " + line);
+            // Advance to next character and begin loop
+            advance();
+
+            while (open_comments > 0) {
+
+                // Account for multi line comments
+                if (peek() == '\n') {
+                    line++;
+                    System.out.println("[New Line in comment] Current line: " + line);
+                }
+                if (last_char == '/' && peek() == '*') {
+                    open_comments++;
+                    System.out.println("[Open found] Total open comments: " + open_comments);
+                }
+                if (last_char == '*' && peek() == '/') {
+                    open_comments--;
+                    System.out.println("[Close found] Total open comments: " + open_comments);
+                }
+
+                // Capture last character
+                if (!isAtEnd()){
+                    last_char = source.charAt(current);
+                    advance();
+                }
+                else {Lox.error(line, "Unclosed comment"); break;}
             }
-            if (last_char == '/' && peek() == '*') {
-                open_comments++;
-                System.out.println("[Open found] Total open comments: " + open_comments);
-            }
-            if (last_char == '*' && peek() == '/') {
-                open_comments--;
-                System.out.println("[Close found] Total open comments: " + open_comments);
-            }
-
-            // Capture last character
-            last_char = source.charAt(current);
-            if (!isAtEnd()) advance();
-        }
+        } else {
+        // Division operator
+        addToken(SLASH);
     }
+}
 
     /**
      * Conditional advance, the current character is only consumed if it matches
