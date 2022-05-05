@@ -196,6 +196,7 @@ public class Scanner {
         if (match('/')) {
             while (peek() != '\n' && !isAtEnd()) advance();
 
+        // Multiline Comment
         } else if (match('*')) {
 
             int open_comments = 1;
@@ -230,10 +231,11 @@ public class Scanner {
                 else {Lox.error(line, "Unclosed comment"); break;}
             }
         } else {
+
         // Division operator
         addToken(SLASH);
+        }
     }
-}
 
     /**
      * Conditional advance, the current character is only consumed if it matches
