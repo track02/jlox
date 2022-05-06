@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /*
 
@@ -36,8 +37,8 @@ public class GenerateAst {
     /**
      * Main entry point, given a output directory
      * Generates abstract syntax tree classes for lox
-     * @param args
-     * @throws IOException
+     * @param args - Command line arrgs
+     * @throws IOException - Invalid args
      */
     public static void main(String[] args) throws IOException {
 
@@ -66,6 +67,9 @@ public class GenerateAst {
         writer.println();
         writer.println("abstract class " + baseName + " {");
 
+        defineVisitor(writer, baseName, types);
+
+
         // The AST Classes
         for (String type: types){
             String className = type.split(":")[0].trim();
@@ -73,9 +77,42 @@ public class GenerateAst {
             defineType(writer, baseName, className, fields);
         }
 
+        // The base accept() method
+        writer.println();
+        writer.println("    abstract <R> R accept(Visitor<R> visitor");
+
         writer.println("}");
         writer.close();
     }
+
+    /**
+     * This function generates the visitor interface
+     * Which outlines a method for each expression subclass - visit<Subclass>Expr()
+     *
+     * Expressions themselves implement an accept method which takes in a visitor implementation
+     * and calls the appropriate 'visit' method on it
+     * E.g. Grouping's accept method would call visitGroupingExpr() on the provided visitor
+     *
+     * The visitor pattern allows easy addition of new methods to a class without modifying it directly
+     * by adding the method to a visitor interface rather than each subclass
+     *
+     * @param writer - Writer to file
+     * @param baseName - baseName
+     * @param types
+     */
+    private static void defineVisitor(
+            PrintWriter writer, String baseName, List<String> types){
+        writer.println("    interface Visitor<R> {");
+
+        for (String type: types){
+            String typeName = type.split(":")[0].trim();
+            writer.println("    R visit" + typeName + baseName + "(" +
+                    typeName + " " + baseName.toLowerCase() + ");");
+        }
+
+        writer.println("   }");
+    }
+
 
     private static void defineType(
             PrintWriter writer, String baseName,
@@ -95,6 +132,15 @@ public class GenerateAst {
         }
 
         writer.println("    }");
+
+        // Visitor pattern
+        writer.println();
+        writer.println("    @Override");
+        writer.println("    <R> R accept(Visitor<R> visitor) {");
+        writer.println("      return visitor.visit" +
+                className + baseName + "(this);");
+        writer.println("    }");
+
 
         // Fields.
         writer.println();
