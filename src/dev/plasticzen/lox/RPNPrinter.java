@@ -2,18 +2,20 @@ package dev.plasticzen.lox;
 
 public class RPNPrinter implements Expr.Visitor<String>{
 
-    public String Print(Expr expr){
+    public String print(Expr expr){
         return expr.accept(this);
     }
 
     @Override
     public String visitBinaryExpr(Expr.Binary expr) {
-        return null;
+
+        return expr.left.accept(this) + " " + expr.right.accept(this) + " " + expr.operator.lexeme;
     }
 
     @Override
     public String visitGroupingExpr(Expr.Grouping expr) {
-        return null;
+
+        return expr.accept(this);
     }
 
     @Override
@@ -25,5 +27,19 @@ public class RPNPrinter implements Expr.Visitor<String>{
     @Override
     public String visitUnaryExpr(Expr.Unary expr) {
         return null;
+    }
+
+    public static void main(String[] args){
+
+        // 123 * 45.67
+        // ->
+        // 123 45.67 *
+
+        Expr expression = new Expr.Binary(
+                new Expr.Literal(123),
+                new Token(TokenType.STAR, "*", null, 1),
+                new Expr.Literal(45.67));
+
+        System.out.println(new RPNPrinter().print(expression));
     }
 }
