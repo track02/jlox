@@ -26,17 +26,19 @@ public class RPNPrinter implements Expr.Visitor<String>{
 
     @Override
     public String visitUnaryExpr(Expr.Unary expr) {
-        return null;
+        return expr.operator.lexeme + expr.right.accept(this);
     }
 
     public static void main(String[] args){
 
-        // 123 * 45.67
+        // -123 * 45.67
         // ->
-        // 123 45.67 *
+        // -123 45.67 *
 
         Expr expression = new Expr.Binary(
-                new Expr.Literal(123),
+                new Expr.Unary(
+                        new Token(TokenType.MINUS, "-", null, 1),
+                        new Expr.Literal(123)),
                 new Token(TokenType.STAR, "*", null, 1),
                 new Expr.Literal(45.67));
 
