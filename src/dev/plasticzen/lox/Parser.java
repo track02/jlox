@@ -3,18 +3,18 @@ package dev.plasticzen.lox;
 import java.util.List;
 import static dev.plasticzen.lox.TokenType.*;
 
+/*
+ * Where the scanner converted raw source code into tokens
+ * Our parser will convert tokens into syntax trees, which
+ * represent the various expressions in lox as defined
+ * by rules in syntactic grammar
+ */
+
+
 public class Parser {
 
     private static class ParseError extends RuntimeException {}
-
-    /*
-     * Where the scanner converted raw source code into tokens
-     * Our parser will convert tokens into syntax trees, which
-     * represent the various expressions in lox as defined
-     * by rules in syntactic grammar
-     */
-
-    private final List<Token> tokens;
+    private final List<Token> tokens; // Tokens from scanner to convert into expressions
     private int current;
 
     Parser(List<Token> tokens){
@@ -41,10 +41,14 @@ public class Parser {
         return equality();
     }
 
-    // equality -> comparison ( ( "!=" | "==" ) comparison )*
+
+    /**
+     * equality -> comparison ( ( "!=" | "==" ) comparison )*
+     * @return Expr representing equality comparison
+     */
     private Expr equality(){
 
-        // First comparison nonterminal
+        // First comparison non-terminal
         Expr expr = comparison();
 
         // Maps to (...)*
@@ -56,10 +60,12 @@ public class Parser {
         }
 
         return expr;
-
     }
 
-    // comparison -> term ( (">" | ">=" | "<" | "<=" ) term)*
+    /**
+     * comparison -> term ( (">" | ">=" | "<" | "<=" ) term)
+     * @return Expr representing comparison
+     */
     private Expr comparison(){
         Expr expr = term();
 
@@ -71,7 +77,10 @@ public class Parser {
         return expr;
     }
 
-    // term -> factor ( ( "-" | "+" ) factor )*
+    /**
+     * term -> factor ( ( "-" | "+" ) factor )
+     * @return Expr, representing term
+     */
     private Expr term(){
         Expr expr = factor();
 
@@ -83,7 +92,11 @@ public class Parser {
         return expr;
     }
 
-    // factor -> unary ( ("/" | "*") unary )*
+    /**
+     * factor -> unary ( ("/" | "*") unary )
+     * @return Expr, representing factor
+     */
+
     private Expr factor(){
         Expr expr = unary();
 
@@ -95,11 +108,14 @@ public class Parser {
         return expr;
     }
 
-    // unary -> ( "!" | "-" ) unary
-    // Look at current token to see how to parse it, if ! or - we must have a unary
-    // expression, so take the token and recursively call unary to parse the operand
-    // and wrap up return result into Unary Expression
-    // Otherwise we have reached highest level of precedence, primary expressions
+    /**
+     * unary -> ( "!" | "-" ) unary
+     * Examines current token to see how to parse it, if ! or - we must have a unary
+     * expression, so take the token and recursively call unary to parse the operand
+     * and wrap up return result into Unary Expression
+     * Otherwise we have reached highest level of precedence, primary expressions
+     * @return Expr, representing Unary
+     */
     private Expr unary(){
         if (match(BANG, MINUS)) {
             Token operator = previous();
@@ -109,7 +125,10 @@ public class Parser {
         return primary();
     }
 
-    // primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+    /**
+     * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+     * @return Expr, representing Primary
+     */
     private Expr primary(){
         if (match(FALSE)) return new Expr.Literal(false);
         if (match(TRUE)) return new Expr.Literal(true);
@@ -129,10 +148,11 @@ public class Parser {
     }
 
 
-
-    // Checks to see if current token has any of the given types
-    // If it does match token is consume and pointer advances
-    // Note - ... next to type indicates var args, zero or more TokenTypes to be passed
+    /**
+     * Checks to see if current token has any of the given types
+     * If it does match token is consumed and pointer advances
+     * Note - ... next to type indicates var args, zero or more TokenTypes to be passed
+     */
     private boolean match(TokenType... types){
         for (TokenType type : types){
             if (check(type)){
@@ -143,54 +163,81 @@ public class Parser {
         return false;
     }
 
-    // Similar to match, checks to see if next token is of expected type
-    // If so it consumes the token, if not then raise an error
-    private Token consume(TokenType type, String message){
-        if (check(type)) return advance();
+    /**
+     * Similar to match, checks to see if next token is of expected type
+     * If so it consumes the token, if not then raise an error
+     */
+    private void consume(TokenType type, String message){
+        if (check(type)) {
+            advance();
+            return;
+        }
         throw error(peek(), message);
     }
 
-    // Check looks at current token and compares its type
-    // Peek is used to avoid advancing current token pointer
+    /**
+     * Check looks at current token and compares its type
+     * Peek is used to avoid advancing current token pointer
+     */
     private boolean check(TokenType type){
         if (isAtEnd()) return false;
         return peek().type == type;
     }
 
-    // Consumes current token and returns it, similar to how scanner operates
+    /**
+     * Consumes current token and returns it, similar to how scanner operates
+     * @return current token
+     */
     private Token advance() {
         if (!isAtEnd()) current++;
         return previous();
     }
 
-    // Checks if tokens still exist to be parsed
+    /**
+     * Checks if tokens still exist to be parsed
+     * @return bool, indicating end of token list
+     */
     private boolean isAtEnd(){
         return peek().type == EOF;
     }
 
-    // Returns current token we have yet to consume
+    /**
+     * Returns current token we have yet to consume
+     * @return current token
+     */
     private Token peek(){
         return tokens.get(current);
     }
 
-    // Returns most recently consumed token
+    /**
+     * Returns most recently consumed token
+     * @return last consumed token
+     */
     private Token previous(){
         return tokens.get(current -1);
     }
 
+    /**
+     *  Reports a lox error, pairing an error message for a given token
+     * @param token token which caused error
+     * @param message error message
+     * @return ParseError
+     */
     private ParseError error(Token token, String message){
         Lox.error(token, message);
         return new ParseError();
     }
 
-    // Synchronise is used to advance parsers state until at the beginning
-    // of the next statement, the boundary between statements is marked by a semicolon
-    // Most statements begin with a keyword (for, if, return ...) when the next token
-    // is any of these we know we're at the beginning of a statement
-    //
-    // So discard tokens until a statement boundary is found
-    // This can be used to re-sync the parser following a parse error, discard the tokens
-    // that are part of the error-causing statement and start again at the next
+    /**
+     * Synchronise is used to advance parsers state until at the beginning
+     * of the next statement, the boundary between statements is marked by a semicolon
+     * Most statements begin with a keyword (for, if, return ...) when the next token
+     * is any of these we know we're at the beginning of a statement
+     *
+     * So discard tokens until a statement boundary is found
+     * This can be used to re-sync the parser following a parse error, discard the tokens
+     * that are part of the error-causing statement and start again at the next
+     */
     private void synchronize(){
         advance();
 

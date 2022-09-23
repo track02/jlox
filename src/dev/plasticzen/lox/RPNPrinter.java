@@ -1,5 +1,8 @@
 package dev.plasticzen.lox;
 
+/*
+ Additional task - add an RPN printer using the visitor pattern
+ */
 public class RPNPrinter implements Expr.Visitor<String>{
 
     public String print(Expr expr){
