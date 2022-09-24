@@ -58,6 +58,8 @@ public class AstPrinter implements Expr.Visitor<String> {
         return parenthesize(expr.operator.lexeme, expr.right);
     }
 
+    public String visitCommaExpr(Expr.Comma expr) {return parenthesize("comma", expr.left, expr.right);}
+
     /**
      * Formats a given expression into a parenthesised string
      * @param name Expression name
