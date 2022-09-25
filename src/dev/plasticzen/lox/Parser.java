@@ -17,6 +17,19 @@ public class Parser {
     private final List<Token> tokens; // Tokens from scanner to convert into expressions
     private int current;
 
+    /*
+    expression     → equality ;
+    equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+    comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+    term           → factor ( ( "-" | "+" ) factor )* ;
+    factor         → unary ( ( "/" | "*" ) unary )* ;
+    unary          → ( "!" | "-" ) unary
+                   | primary ;
+    primary        → NUMBER | STRING | "true" | "false" | "nil"
+                   | "(" expression ")" ;
+    comma          → expression "," (comma | expression) ;
+     */
+
     Parser(List<Token> tokens){
         this.tokens = tokens;
     }
