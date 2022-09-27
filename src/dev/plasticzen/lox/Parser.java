@@ -19,6 +19,7 @@ public class Parser {
 
     /*
     expression     → equality ;
+    comma          → expression ("," equality)*;
     equality       → comparison ( ( "!=" | "==" ) comparison )* ;
     comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
     term           → factor ( ( "-" | "+" ) factor )* ;
@@ -27,7 +28,7 @@ public class Parser {
                    | primary ;
     primary        → NUMBER | STRING | "true" | "false" | "nil"
                    | "(" expression ")" ;
-    comma          → expression "," (comma | expression) ;
+
      */
 
     Parser(List<Token> tokens){
@@ -51,7 +52,7 @@ public class Parser {
 
     // expression -> equality
     private Expr expression(){
-        return equality();
+        return comma();
     }
 
 
@@ -178,12 +179,18 @@ public class Parser {
 
 
     /**
-     * comma -> expression "," ( comma | expression)
+     * comma -> equality ("," comma)*
+     * comma operator has the lowest precedence so fits between expression/equality
      * @return Expr representing comma expression list
      */
     private Expr comma(){
-        // ToDo
-        return new Expr.Comma(null, null);
+        Expr expr =  equality();
+
+        while (match(COMMA)){
+            Expr right = equality();
+            expr = new Expr.Comma(expr, right);
+        }
+        return expr;
     }
 
 
