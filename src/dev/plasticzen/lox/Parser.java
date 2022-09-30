@@ -18,8 +18,8 @@ public class Parser {
     private int current;
 
     /*
+
     expression     → equality ;
-    comma          → expression ("," equality)*;
     equality       → comparison ( ( "!=" | "==" ) comparison )* ;
     comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
     term           → factor ( ( "-" | "+" ) factor )* ;
@@ -52,7 +52,7 @@ public class Parser {
 
     // expression -> equality
     private Expr expression(){
-        return comma();
+        return equality();
     }
 
 
@@ -160,39 +160,6 @@ public class Parser {
 
         throw error(peek(), "Expect expression.");
     }
-
-    /*
-     * Ex Add support for comma expressions
-     * A comma-separated series of expressions can be given where a single expression is expected
-     * except inside a function call argument list
-     *
-     * At runtime, the comma operator evaluates the left operand and discards the result
-     * Then it evaluates a returns the right operand
-     *
-     * Add support for comma expressions, give them the same precedence and associativity as in C
-     * Write the grammar and then the parsing code
-     *
-     * E.g.
-     *
-     * i = (a, b) would assign the value of b to i
-     */
-
-
-    /**
-     * comma -> equality ("," comma)*
-     * comma operator has the lowest precedence so fits between expression/equality
-     * @return Expr representing comma expression list
-     */
-    private Expr comma(){
-        Expr expr =  equality();
-
-        while (match(COMMA)){
-            Expr right = equality();
-            expr = new Expr.Comma(expr, right);
-        }
-        return expr;
-    }
-
 
     /**
      * Checks to see if current token has any of the given types
