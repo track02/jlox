@@ -42,4 +42,51 @@ public class Interpreter implements Expr.Visitor<Object>{
         return expr.value;
     }
 
+
+    // A grouping contains a single reference to another expression
+    // in this case we recursively evaluate the subexpression until a value is reached
+
+    /**
+     * Evaluates a grouping expression returning an object value
+     * @param expr Grouping expression
+     * @return Object value
+     */
+    @Override
+    public Object visitGroupingExpr(Expr.Grouping expr){
+        return evaluate(expr.expression);
+    }
+
+    // Unary expressions also consist of a single subexpression
+    //
+    // First evaluate operand expression then apply the operator to the result of that evaluation
+    // We can't evaluate an operator until the operand is evaluated, this means the interpreter is performing
+    // a post-order traversal - each node evaluates its children before doing its own work
+
+    @Override
+    public Object visitUnaryExpr(Expr.Unary expr){
+        Object right = evaluate(expr.right); // Operand
+
+        return switch (expr.operator.type) { // Operator application
+            case MINUS -> -(double) right; // A minus must mean the subexpression is a number, perform cast
+            case BANG -> // Logical not, determine whether operand is truthy and invert result (True <-> False)
+                    !isTruthy(right);
+            default -> null;
+        };
+    }
+
+    // We need to decide what happens with values other than 'True' or 'False' in a logic operation
+    // Lox treats null and false as false and everything else is true
+
+    /**
+     * Determines whether a given object is truthful
+     * null / false -> False
+     * everything else -> True
+     * @param object Object to check
+     * @return boolean, object is or isn't truthful
+     */
+    private boolean isTruthy(Object object){
+        if (object == null) return false;
+        if (object instanceof Boolean) return (boolean) object;
+        return true;
+    }
 }
