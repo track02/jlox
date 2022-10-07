@@ -77,12 +77,16 @@ public class Interpreter implements Expr.Visitor<Object>{
     public Object visitUnaryExpr(Expr.Unary expr){
         Object right = evaluate(expr.right); // Operand
 
-        return switch (expr.operator.type) { // Operator application
-            case MINUS -> -(double) right; // A minus must mean the subexpression is a number, perform cast
-            case BANG -> // Logical not, determine whether operand is truthy and invert result (True <-> False)
-                    !isTruthy(right);
-            default -> null;
-        };
+        switch (expr.operator.type) { // Operator application
+            case MINUS:
+                    // We need to check for errors during interpreter evaluation, confirm operands are numeric
+                    checkNumberOperand(expr.operator, right);
+                    return -(double) right; // A minus must mean the subexpression is a number, perform cast
+            case BANG: // Logical not, determine whether operand is truthy and invert result (True <-> False)
+                    return !isTruthy(right);
+            default:
+                    return null;
+        }
     }
 
     // Binary expressions cover a range of operations
@@ -102,18 +106,25 @@ public class Interpreter implements Expr.Visitor<Object>{
 
         switch (expr.operator.type) {
             case GREATER:
+                checkNumberOperands(expr.operator, left, right);
                 return (double) left > (double) right;
             case GREATER_EQUAL:
+                checkNumberOperands(expr.operator, left, right);
                 return (double) left >= (double) right;
             case LESS:
+                checkNumberOperands(expr.operator, left, right);
                 return (double) left < (double) right;
             case LESS_EQUAL:
+                checkNumberOperands(expr.operator, left, right);
                 return (double) left <= (double) right;
             case MINUS:
+                checkNumberOperands(expr.operator, left, right);
                 return (double) left - (double) right;
             case SLASH:
+                checkNumberOperands(expr.operator, left, right);
                 return (double) left / (double) right;
             case STAR:
+                checkNumberOperands(expr.operator, left, right);
                 return (double) left * (double) right;
             case PLUS:
                 if (left instanceof Double && right instanceof Double) {
@@ -122,8 +133,9 @@ public class Interpreter implements Expr.Visitor<Object>{
                 if (left instanceof String && right instanceof String) {
                     return (String) left + (String) right;
                 }
-                break;
 
+                throw new RuntimeError(expr.operator,
+                        "Operands must be two numbers or two strings.");
 
             case BANG_EQUAL: // !=
                 return !isEqual(left,right);
@@ -174,6 +186,29 @@ public class Interpreter implements Expr.Visitor<Object>{
         if (a == null) return false;
 
         return a.equals(b);
+    }
+
+
+    /**
+     * Takes in an operand and operator of a unary expression and checks whether operand is a number
+     * @param operator Expression operator
+     * @param operand Expression operand
+     */
+    private void checkNumberOperand(Token operator, Object operand){
+        if (operand instanceof Double) return;
+        throw new RuntimeError(operator, "Operand must be a number!");
+    }
+
+
+    /**
+     * Takes in operands and operator of binary expression and checks whether operands are numbers
+     * @param operator Expression operator
+     * @param left Expression left operand
+     * @param right Expression right operand
+     */
+    private void checkNumberOperands(Token operator, Object left, Object right){
+        if (left instanceof Double && right instanceof Double) return;
+        throw new RuntimeError(operator, "Operands must be a numbers!");
     }
 
 
