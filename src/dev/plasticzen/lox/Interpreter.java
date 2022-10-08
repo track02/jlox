@@ -26,6 +26,22 @@ package dev.plasticzen.lox;
 
 public class Interpreter implements Expr.Visitor<Object>{
 
+    // Public method for using the interpreter
+    // Takes in a syntax tree for an expression and evaluates it
+    // Resulting value (if successful) is converted to a string and displayed to user
+
+    /**
+     * Given a lox expression attempts to evaluate it and display the result
+     * @param expression lox expression to evaluate
+     */
+    void interpret(Expr expression) {
+        try{
+            Object value = evaluate(expression);
+            System.out.println(stringify(value));
+        } catch (RuntimeError error){
+            Lox.runtimeError(error);
+        }
+    }
 
     /**
      * Helper method used to send expression back into
@@ -186,6 +202,26 @@ public class Interpreter implements Expr.Visitor<Object>{
         if (a == null) return false;
 
         return a.equals(b);
+    }
+
+    // Helper method that bridges gap between
+    // internal java reperesentation of objects and users view of lox objects
+
+    /**
+     * Converts a lox value into a user readable string
+     * @param object lox value object
+     * @return string representation
+     */
+    private String stringify(Object object){
+        if (object == null) return "nil";
+        if (object instanceof Double){
+            String text = object.toString();
+            if (text.endsWith(".0")){ // Remove .0 from integers
+                text = text.substring(0, text.length() - 2);
+            }
+            return text;
+        }
+        return object.toString();
     }
 
 
