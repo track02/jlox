@@ -10,12 +10,11 @@ import java.util.List;
 
 public class Lox {
 
-    /*
-     * Chp 3 - Scanner, Starting point is a scanner which takes in raw source code and groups it into a series of
-     * tokens  are the meaningful elements that make up the languages grammar
-     */
+    private static final Interpreter interpreter = new Interpreter();
+
 
     static boolean hadError = false;
+    static boolean hadRuntimeError = false;
 
     /**
      * Main entry point, checks passed in command line args and hands over to relevant function
@@ -48,6 +47,7 @@ public class Lox {
 
         // Indicate an error in the exit code
         if (hadError) System.exit(65);
+        if (hadRuntimeError) System.exit(76);
 
     }
 
@@ -82,9 +82,12 @@ public class Lox {
         Parser parser = new Parser(tokens);
         Expr expression = parser.parse();
 
+        // Stop if error encountered during scanning / parsing
         if (hadError) return;
 
-        System.out.println(new AstPrinter().print(expression));
+        // Run our parsed expression through the interpreter for execution
+        interpreter.interpret(expression);
+
 
 
     }
@@ -107,6 +110,19 @@ public class Lox {
     private static void report(int line, String where, String message){
         System.err.println("[line " + line + "] Error" + where + ": " + message);
         hadError = true;
+    }
+
+    /**
+     * Helper function to display a runtime error back to the user
+     * to be called by interpreter if error is encountered during
+     * expression evaluation
+     * @param error - runtime error (caught by interpreter)
+     */
+
+    static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() +
+                "\n[line " + error.token.line + "]");
+        hadRuntimeError = true;
     }
 
     static void error(Token token, String message){

@@ -1,5 +1,6 @@
 package dev.plasticzen.lox;
 
+import java.util.ArrayList;
 import java.util.List;
 import static dev.plasticzen.lox.TokenType.*;
 
@@ -18,7 +19,21 @@ public class Parser {
     private int current;
 
     /*
+     * A lox script consists of a number of statements followed by an end of file
+     * Statements can either be expression statements or print statements
+     * An expression statement is an expression followed by a semicolon
+     * A print statement is an expression preceded by 'print'
+     *
+     */
 
+    /*
+    program        → statement* EOF ;
+
+    statement      → exprStmt
+                   | printStmt ;
+
+    exprStmt       → expression ";" ;
+    printStmt      → "print" expression ";" ;
     expression     → equality ;
     equality       → comparison ( ( "!=" | "==" ) comparison )* ;
     comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
@@ -35,12 +50,12 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    Expr parse() {
-        try {
-            return expression();
-        } catch (ParseError error) {
-            return null;
+    List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!isAtEnd()) {
+            statements.add(statement());
         }
+        return statements;
     }
 
 
@@ -53,6 +68,38 @@ public class Parser {
     // expression -> equality
     private Expr expression(){
         return equality();
+    }
+
+
+    /**
+     * A program consists of a list of statements, this method is used
+     * to parse out one statement at a time
+     * @return Stmt parsed from current position
+     */
+    private Stmt statement() {
+        if (match(PRINT)) return printStatement();
+
+        return expressionStatement();
+    }
+
+    /**
+     * Parses a print statement
+     * @return Print Stmt
+     */
+    private Stmt printStatement() {
+        Expr value = expression();
+        consume(SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+
+    /**
+     * Parses an expression followed by a semicolon (expression statement)
+     * @return Parsed expression statement
+     */
+    private Stmt expressionStatement() {
+        Expr expr = expression();
+        consume(SEMICOLON, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
     }
 
 

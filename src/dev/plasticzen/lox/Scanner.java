@@ -84,30 +84,32 @@ public class Scanner {
         char c = advance();
         switch (c) {
             // Single character lexemes
-            case '(' -> addToken(LEFT_PAREN);
-            case ')' -> addToken(RIGHT_PAREN);
-            case '{' -> addToken(LEFT_BRACE);
-            case '}' -> addToken(RIGHT_BRACE);
-            case ',' -> addToken(COMMA);
-            case '.' -> addToken(DOT);
-            case '-' -> addToken(MINUS);
-            case '+' -> addToken(PLUS);
-            case ';' -> addToken(SEMICOLON);
-            case '*' -> addToken(STAR);
+            case '(' : addToken(LEFT_PAREN);
+            case ')' : addToken(RIGHT_PAREN);
+            case '{' : addToken(LEFT_BRACE);
+            case '}' : addToken(RIGHT_BRACE);
+            case ',' : addToken(COMMA);
+            case '.' : addToken(DOT);
+            case '-' : addToken(MINUS);
+            case '+' : addToken(PLUS);
+            case ';' : addToken(SEMICOLON);
+            case '*' : addToken(STAR);
             // '/' is a special case as it can be used for comments and division
-            case '/' -> slash();
+            case '/' : slash();
             // Second character lexemes, look at next character and check
-            case '!' -> addToken(match('=') ? BANG_EQUAL : BANG);
-            case '=' -> addToken(match('=') ? EQUAL_EQUAL : EQUAL);
-            case '<' -> addToken(match('=') ? LESS_EQUAL : LESS);
-            case '>' -> addToken(match('=') ? GREATER_EQUAL : GREATER);
+            case '!' : addToken(match('=') ? BANG_EQUAL : BANG);
+            case '=' : addToken(match('=') ? EQUAL_EQUAL : EQUAL);
+            case '<' : addToken(match('=') ? LESS_EQUAL : LESS);
+            case '>' : addToken(match('=') ? GREATER_EQUAL : GREATER);
             // Skip over meaningless characters
-            case ' ', '\r', '\t' -> {}
+            case ' ' : {};
+            case '\r': {};
+            case '\t' : {};
             // Increment line counter for a new line
-            case '\n' -> line++;
+            case '\n' : line++;
             // String lexeme handling
-            case '"' -> string();
-            default -> {
+            case '"' : string();
+            default : {
                 // Number lexemes
                 if (isDigit(c)) {
                     number();
