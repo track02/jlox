@@ -80,15 +80,13 @@ public class Lox {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
 
         // Stop if error encountered during scanning / parsing
         if (hadError) return;
 
-        // Run our parsed expression through the interpreter for execution
-        interpreter.interpret(expression);
-
-
+        // Run our parsed statements through the interpreter for execution
+        interpreter.interpret(statements);
 
     }
 

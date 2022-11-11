@@ -22,9 +22,15 @@ package dev.plasticzen.lox;
 
   The Interpreter will use the Visitor pattern and upon visiting an expression will return an Object
 
+  For executing statements the Interpreter must also implement the Statement Visitor
+  As statements produce not return value the return type of visit methods is void
+
  */
 
-public class Interpreter implements Expr.Visitor<Object>{
+import java.util.List;
+
+public class Interpreter implements Expr.Visitor<Object>,
+                                    Stmt.Visitor<Void>{
 
     // Public method for using the interpreter
     // Takes in a syntax tree for an expression and evaluates it
@@ -34,10 +40,11 @@ public class Interpreter implements Expr.Visitor<Object>{
      * Given a lox expression attempts to evaluate it and display the result
      * @param expression lox expression to evaluate
      */
-    void interpret(Expr expression) {
+    void interpret(List<Stmt> statements) {
         try{
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
         } catch (RuntimeError error){
             Lox.runtimeError(error);
         }
@@ -53,6 +60,44 @@ public class Interpreter implements Expr.Visitor<Object>{
     private Object evaluate(Expr expr){
         return expr.accept(this);
     }
+
+
+    /**
+     * Helper method used to pass interpreter to given statements accept method
+     * Which calls type specific visit method
+     * @param stmt - Statement to execute
+     */
+    private void execute(Stmt stmt) {
+        stmt.accept(this);
+    }
+
+    /**
+     * For expression statements we evaluate the inner
+     * expression using the existing evaluate method and then discard the value
+     * Note - Java requires a null return to satisfy Void return type
+     * @param stmt - Expression statement to execute
+     * @return null
+     */
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt){
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    /**
+     * Print statement has a similar visit method
+     * The inner expression is evaluated, the result is printed and then discarded
+     * @param stmt - Print statement to execute
+     * @return null
+     */
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
+    }
+
 
     /*
      * Literals form the leaves of our tree, the atomic bits of syntax which other expressions are made of
