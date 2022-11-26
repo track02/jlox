@@ -36,7 +36,7 @@ public class GenerateAst {
 
     /**
      * Main entry point, given a output directory
-     * Generates abstract syntax tree classes for lox
+     * Generates abstract syntax tree classes for lox grammar rules
      * @param args - Command line arrgs
      * @throws IOException - Invalid args
      */
@@ -51,13 +51,15 @@ public class GenerateAst {
                 "Binary     : Expr left, Token operator, Expr right",
                 "Grouping   : Expr expression",
                 "Literal    : Object value",
-                "Unary      : Token operator, Expr right"
+                "Unary      : Token operator, Expr right",
+                "Variable   : Token name"
         ));
 
         //
         defineAst(outputDir, "Stmt", Arrays.asList(
                 "Expression : Expr expression",
-                "Print      : Expr expression"
+                "Print      : Expr expression",
+                "Var        : Token name, Expr initialiser"
         ));
 
     }

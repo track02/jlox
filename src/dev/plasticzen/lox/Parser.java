@@ -19,7 +19,7 @@ public class Parser {
     private int current;
 
     /*
-     * A lox script consists of a number of statements followed by an end of file
+     * A lox script consists of number of declarations followed by an end of file
      * Statements can either be expression statements or print statements
      * An expression statement is an expression followed by a semicolon
      * A print statement is an expression preceded by 'print'
@@ -27,11 +27,15 @@ public class Parser {
      */
 
     /*
-    program        → statement* EOF ;
+    program        → declaration* EOF ;
+
+    declaration    → varDecl
+                   | statement ;
 
     statement      → exprStmt
                    | printStmt ;
 
+    varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
     exprStmt       → expression ";" ;
     printStmt      → "print" expression ";" ;
     expression     → equality ;
@@ -41,8 +45,10 @@ public class Parser {
     factor         → unary ( ( "/" | "*" ) unary )* ;
     unary          → ( "!" | "-" ) unary
                    | primary ;
-    primary        → NUMBER | STRING | "true" | "false" | "nil"
-                   | "(" expression ")" ;
+    primary        → "true" | "false" | "nil"
+                   | NUMBER | STRING
+                   | "(" expression ")"
+                   | IDENTIFIER ;
 
      */
 
@@ -53,7 +59,7 @@ public class Parser {
     List<Stmt> parse() {
         List<Stmt> statements = new ArrayList<>();
         while (!isAtEnd()) {
-            statements.add(statement());
+            statements.add(declaration());
         }
         return statements;
     }
@@ -70,6 +76,21 @@ public class Parser {
         return equality();
     }
 
+    /**
+     * Declaration is called repeatedly when parsing a series of statements
+     * It first checks for a variable declaration by looking for a VAR keyword, if not present
+     * it falls through to the statement method which parses print and expression statements
+     * @return Parsed statement
+     */
+    private Stmt declaration() {
+        try {
+            if (match(VAR)) return varDeclaration();
+            return statement();
+        } catch (ParseError error) {
+            synchronize();
+            return null;
+        }
+    }
 
     /**
      * A program consists of a list of statements, this method is used
@@ -90,6 +111,28 @@ public class Parser {
         Expr value = expression();
         consume(SEMICOLON, "Expect ';' after value.");
         return new Stmt.Print(value);
+    }
+
+    /**
+     * Parses a var statement from tokens
+     * Expect parser to have already matched `var` so checks
+     * first for identifier (variable name) then looks for =
+     * If present knows there is an initialiser expression, if not
+     * leaves as null
+     * Lastly consumes required semicolon at end of statement and
+     * wraps up tokens as Stmt.var syntax tree
+     * @return Var statement
+     */
+    private Stmt varDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect variable name");
+
+        Expr initializer = null;
+        if (match(EQUAL)){
+            initializer = expression();
+        }
+
+        consume(SEMICOLON, "Expect ';' after variable declaration");
+        return new Stmt.Var(name, initializer);
     }
 
     /**
@@ -187,7 +230,7 @@ public class Parser {
     }
 
     /**
-     * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+     * primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" | IDENTIFIER
      * @return Expr, representing Primary
      */
     private Expr primary(){
@@ -197,6 +240,10 @@ public class Parser {
 
         if (match(NUMBER, STRING)){
             return new Expr.Literal(previous().literal);
+        }
+
+        if (match(IDENTIFIER)){
+            return new Expr.Variable(previous());
         }
 
         if (match(LEFT_PAREN)) {
@@ -227,10 +274,9 @@ public class Parser {
      * Similar to match, checks to see if next token is of expected type
      * If so it consumes the token, if not then raise an error
      */
-    private void consume(TokenType type, String message){
+    private Token consume(TokenType type, String message){
         if (check(type)) {
-            advance();
-            return;
+            return advance();
         }
         throw error(peek(), message);
     }

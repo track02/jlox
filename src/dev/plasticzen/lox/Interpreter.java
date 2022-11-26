@@ -98,6 +98,11 @@ public class Interpreter implements Expr.Visitor<Object>,
         return null;
     }
 
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+        return null;
+    }
+
 
     /*
      * Literals form the leaves of our tree, the atomic bits of syntax which other expressions are made of
@@ -149,6 +154,7 @@ public class Interpreter implements Expr.Visitor<Object>,
                     return null;
         }
     }
+
 
     // Binary expressions cover a range of operations
     //
