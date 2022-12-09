@@ -32,9 +32,8 @@ import java.util.List;
 public class Interpreter implements Expr.Visitor<Object>,
                                     Stmt.Visitor<Void>{
 
-    // Public method for using the interpreter
-    // Takes in a syntax tree for an expression and evaluates it
-    // Resulting value (if successful) is converted to a string and displayed to user
+
+    private Environment environment = new Environment();
 
     /**
      * Given a lox expression attempts to evaluate it and display the result
@@ -98,8 +97,20 @@ public class Interpreter implements Expr.Visitor<Object>,
         return null;
     }
 
+    /**
+     * Evaluates a variable assignment statement and updates environment appropriately
+     * If variable has an initializer (a = 10) then the initializer is evaluated and the value is
+     * paired to the variable name under the environment
+     * @param stmt variable statement
+     * @return null
+     */
     @Override
-    public Void visitVarStmt(Stmt.Var stmt) {
+    public Void visitVarStmt(Stmt.Var stmt){
+        Object value = null;
+        if (stmt.initialiser != null){
+            value = evaluate(stmt.initialiser);
+        }
+        environment.define(stmt.name.lexeme, value);
         return null;
     }
 
@@ -153,6 +164,17 @@ public class Interpreter implements Expr.Visitor<Object>,
             default:
                     return null;
         }
+    }
+
+    /**
+     * Evaluates a given variable expression by looking up the variable name in the environment and
+     * returning the assigned value (if any)
+     * @param expr variable expression to evaluate
+     * @return variable value
+     */
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr){
+        return environment.get(expr.name);
     }
 
 
