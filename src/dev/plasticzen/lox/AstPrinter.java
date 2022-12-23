@@ -17,6 +17,11 @@ public class AstPrinter implements Expr.Visitor<String> {
         return expr.accept(this);
     }
 
+    @Override
+    public String visitAssignExpr(Expr.Assign expr) {
+        return null;
+    }
+
     /**
      * Prints a binary expression
      * @param expr Binary Expression

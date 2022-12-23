@@ -10,7 +10,17 @@ import java.util.Map;
 
 public class Environment
 {
+
+    final Environment enclosing; // Reference to environment enclosing this one
+
     private final Map<String, Object> values = new HashMap<>();
+
+    Environment() { // Top level 'global' environment
+        enclosing = null;
+    }
+    Environment(Environment enclosing) { // Enclosed environments
+        this.enclosing = enclosing;
+    }
 
 
     /**
@@ -24,7 +34,8 @@ public class Environment
     }
 
     /**
-     * Used to looking the value bound to a name
+     * Used to locate the value bound to a name
+     * by checking current environment along with any parent environments
      * If the name is found the value is returned
      * Otherwise a RunTime error is thrown
      * @param name - binding name to lookup
@@ -35,8 +46,33 @@ public class Environment
             return values.get(name.lexeme);
         }
 
+        if (enclosing != null) return enclosing.get(name); // Walk up the chain of nested environments searching for variable
+
         throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
     }
+
+    /**
+     * Updates the value of an existing variable
+     * in the environment
+     * @param name variable name
+     * @param value variable value
+     */
+    void assign(Token name, Object value) {
+
+        if (values.containsKey(name.lexeme)) {
+            values.put(name.lexeme, value);
+            return;
+        }
+
+        if (enclosing != null) {
+            enclosing.assign(name, value);
+            return;
+        }
+
+        throw new RuntimeError(name,
+                "Undefined variable '" + name.lexeme + "'.");
+    }
+
 
 
 }

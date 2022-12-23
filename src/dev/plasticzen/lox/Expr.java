@@ -8,6 +8,7 @@ import java.util.List;
  */
 abstract class Expr {
     interface Visitor<R> {
+    R visitAssignExpr(Assign expr);
     R visitBinaryExpr(Binary expr);
     R visitGroupingExpr(Grouping expr);
     R visitLiteralExpr(Literal expr);
@@ -22,6 +23,27 @@ abstract class Expr {
    * @param <R> Visitor dependant
    */
   abstract <R> R accept(Visitor<R> visitor);
+
+  /**
+   * Represents an assignment expression
+   * consisting of a variable name and a value
+   */
+  static class Assign extends Expr {
+    Assign(Token name, Expr value) {
+      this.name = name;
+      this.value = value;
+    }
+
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitAssignExpr(this);
+    }
+
+    final Token name;
+    final Expr value;
+  }
+
 
   /**
    * Represents an expression consisting of two expressions and an operator

@@ -33,12 +33,19 @@ public class Parser {
                    | statement ;
 
     statement      → exprStmt
-                   | printStmt ;
+                   | printStmt
+                   | block;
+
+
+    block          → "{" declaration* "}" ;
 
     varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
     exprStmt       → expression ";" ;
     printStmt      → "print" expression ";" ;
-    expression     → equality ;
+    expression     → assignment ;
+    assignment     → IDENTIFIER "=" assignment
+                   | equality ;
+
     equality       → comparison ( ( "!=" | "==" ) comparison )* ;
     comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
     term           → factor ( ( "-" | "+" ) factor )* ;
@@ -73,7 +80,7 @@ public class Parser {
 
     // expression -> equality
     private Expr expression(){
-        return equality();
+        return assignment();
     }
 
     /**
@@ -113,6 +120,7 @@ public class Parser {
         return new Stmt.Print(value);
     }
 
+
     /**
      * Parses a var statement from tokens
      * Expect parser to have already matched `var` so checks
@@ -121,6 +129,10 @@ public class Parser {
      * leaves as null
      * Lastly consumes required semicolon at end of statement and
      * wraps up tokens as Stmt.var syntax tree
+     *
+     * Note - This is for variable declaration, (var x = ...)
+     * which differs from assignment (x = ...)
+     *
      * @return Var statement
      */
     private Stmt varDeclaration() {
@@ -144,6 +156,29 @@ public class Parser {
         consume(SEMICOLON, "Expect ';' after expression.");
         return new Stmt.Expression(expr);
     }
+
+    /**
+     * Parses an assignment or drops through to equality
+     * @return Expr
+     */
+    private Expr assignment() {
+        Expr expr = equality();
+
+        if (match(EQUAL)) {
+            Token equals = previous();
+            Expr value = assignment();
+
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            }
+
+            error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
+    }
+
 
 
     /**

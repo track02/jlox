@@ -98,7 +98,7 @@ public class Interpreter implements Expr.Visitor<Object>,
     }
 
     /**
-     * Evaluates a variable assignment statement and updates environment appropriately
+     * Evaluates a variable declaration statement and updates environment appropriately
      * If variable has an initializer (a = 10) then the initializer is evaluated and the value is
      * paired to the variable name under the environment
      * @param stmt variable statement
@@ -112,6 +112,18 @@ public class Interpreter implements Expr.Visitor<Object>,
         }
         environment.define(stmt.name.lexeme, value);
         return null;
+    }
+
+    /**
+     * Evaluates a variable assignment and updates the environment accordingly
+     * @param expr Assignment expression
+     * @return  null
+     */
+    @Override
+    public Object visitAssignExpr(Expr.Assign expr) {
+        Object value = evaluate(expr.value);
+        environment.assign(expr.name, value);
+        return value;
     }
 
 
