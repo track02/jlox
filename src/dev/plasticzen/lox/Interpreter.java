@@ -71,6 +71,38 @@ public class Interpreter implements Expr.Visitor<Object>,
     }
 
     /**
+     * Given a block (list of statements) and enclosing environment
+     * Switches to the given environment and attempts to execute each statement in the block
+     * @param statements Block of statements
+     * @param environment Block environment
+     */
+    void executeBlock(List<Stmt> statements,
+                      Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
+        } finally {
+            this.environment = previous;
+        }
+    }
+
+    /**
+     * Visiting a block statement results in executing all statements within the block
+     * under the current environment
+     * @param stmt Block statement
+     * @return null
+     */
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
+    /**
      * For expression statements we evaluate the inner
      * expression using the existing evaluate method and then discard the value
      * Note - Java requires a null return to satisfy Void return type

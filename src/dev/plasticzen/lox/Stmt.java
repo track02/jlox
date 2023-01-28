@@ -6,8 +6,8 @@ abstract class Stmt {
     interface Visitor<R> {
       R visitBlockStmt(Block stmt);
       R visitExpressionStmt(Expression stmt);
-    R visitPrintStmt(Print stmt);
-    R visitVarStmt(Var stmt);
+      R visitPrintStmt(Print stmt);
+      R visitVarStmt(Var stmt);
    }
 
   static class Block extends Stmt {
