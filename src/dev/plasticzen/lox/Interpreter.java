@@ -115,13 +115,31 @@ public class Interpreter implements Expr.Visitor<Object>,
         return null;
     }
 
+
+
+    /**
+     * Evaluates the if condition, if truthy then executes the then branch
+     * Otherwise executes the else branch if present
+     * @param stmt - If statement to execute
+     * @return null
+     */
+    @Override
+    public Void visitIfStmt(Stmt.If stmt) {
+        if (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.thenBranch);
+        } else if (stmt.elseBranch != null) {
+            execute(stmt.elseBranch);
+        }
+        return null;
+    }
+
+
     /**
      * Print statement has a similar visit method
      * The inner expression is evaluated, the result is printed and then discarded
      * @param stmt - Print statement to execute
      * @return null
      */
-
     @Override
     public Void visitPrintStmt(Stmt.Print stmt) {
         Object value = evaluate(stmt.expression);
