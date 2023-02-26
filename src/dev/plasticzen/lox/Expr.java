@@ -13,6 +13,7 @@ abstract class Expr {
     R visitGroupingExpr(Grouping expr);
     R visitLiteralExpr(Literal expr);
     R visitUnaryExpr(Unary expr);
+    R visitLogicalExpr(Logical expr);
     R visitVariableExpr(Variable expr);
    }
 
@@ -98,6 +99,30 @@ abstract class Expr {
 
     final Object value;
   }
+
+
+  /**
+   * Represents a logical expression, and / or
+   * Note different to boolean expression && / || due to ability to short circuit
+   */
+  static class Logical extends Expr {
+    Logical(Expr left, Token operator, Expr right) {
+      this.left = left;
+      this.operator = operator;
+      this.right = right;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) {
+      return visitor.visitLogicalExpr(this);
+    }
+
+    final Expr left;
+    final Token operator;
+    final Expr right;
+  }
+
+
 
   /**
    * Represents an operand and sub-expression

@@ -193,6 +193,25 @@ public class Interpreter implements Expr.Visitor<Object>,
     }
 
 
+    /**
+     * Converts a logical expression into a truthy value
+     * @param expr Logical expression to evaluate
+     * @return Object value 
+     */
+    @Override
+    public Object visitLogicalExpr(Expr.Logical expr) {
+        Object left = evaluate(expr.left);
+
+        if (expr.operator.type == TokenType.OR) {
+            if (isTruthy(left)) return left;
+        } else {
+            if (!isTruthy(left)) return left;
+        }
+
+        return evaluate(expr.right);
+    }
+
+
     // A grouping contains a single reference to another expression
     // in this case we recursively evaluate the subexpression until a value is reached
 
