@@ -112,6 +112,7 @@ public class Parser {
         if (match(PRINT)) return printStatement();
         if (match(IF)) return ifStatement();
         if (match(LEFT_BRACE)) return new Stmt.Block(block());
+        if (match(WHILE)) return whileStatement();
 
         return expressionStatement();
     }
@@ -171,6 +172,22 @@ public class Parser {
 
         consume(SEMICOLON, "Expect ';' after variable declaration");
         return new Stmt.Var(name, initializer);
+    }
+
+    /***
+     * Parses a while statement from tokens
+     * Expect While to already have been matched
+     * So pulls out the conditional within the brackets
+     * And then the following statement to be executed
+     * @return While statement
+     */
+    private Stmt whileStatement() {
+        consume(LEFT_PAREN, "Expect '(' after 'while'.");
+        Expr condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after condition.");
+        Stmt body = statement();
+
+        return new Stmt.While(condition, body);
     }
 
     /**

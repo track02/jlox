@@ -165,6 +165,22 @@ public class Interpreter implements Expr.Visitor<Object>,
     }
 
     /**
+     * Evaluates a while statement
+     * Making use of underlying java while loop to repeatedly
+     * execute the statement body whilst the condition is truthy
+     * @param stmt - While statement to be executed
+     * @return null
+     */
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt) {
+        while (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.body);
+        }
+        return null;
+    }
+
+
+    /**
      * Evaluates a variable assignment and updates the environment accordingly
      * @param expr Assignment expression
      * @return  null
