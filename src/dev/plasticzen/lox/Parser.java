@@ -1,6 +1,7 @@
 package dev.plasticzen.lox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import static dev.plasticzen.lox.TokenType.*;
 
@@ -110,11 +111,64 @@ public class Parser {
      */
     private Stmt statement() {
         if (match(PRINT)) return printStatement();
+        if (match(FOR)) return forStatement();
         if (match(IF)) return ifStatement();
         if (match(LEFT_BRACE)) return new Stmt.Block(block());
         if (match(WHILE)) return whileStatement();
 
         return expressionStatement();
+    }
+
+    /**
+     * Parses a for statement
+     * Desugars into while statement
+     * @return For Statement
+     */
+    private Stmt forStatement() {
+        consume(LEFT_PAREN, "Expect '(' after 'for'.");
+
+        Stmt initializer;
+        if (match(SEMICOLON)){
+            initializer = null;
+        } else if (match(VAR)) {
+            initializer = varDeclaration();
+        } else {
+            initializer = expressionStatement();
+        }
+
+        Expr condition = null;
+        if (!check(SEMICOLON)) {
+            condition = expression();
+        }
+        consume(SEMICOLON, "Expect ';' after loop condition.");
+
+
+        Expr increment = null;
+        if (!check(RIGHT_PAREN)) {
+            increment = expression();
+        }
+        consume(RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        consume(RIGHT_PAREN, "Expect ')' after for clauses.");
+
+        Stmt body = statement();
+
+        if (increment != null) {
+            body = new Stmt.Block(
+                    Arrays.asList(
+                            body,
+                            new Stmt.Expression(increment)));
+        }
+
+        if (condition == null) condition = new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+
+        if (initializer != null) {
+            body = new Stmt.Block(Arrays.asList(initializer, body));
+        }
+
+        return body;
+
     }
 
     /**
@@ -344,7 +398,7 @@ public class Parser {
      * Examines current token to see how to parse it, if ! or - we must have a unary
      * expression, so take the token and recursively call unary to parse the operand
      * and wrap up return result into Unary Expression
-     * Otherwise we have reached highest level of precedence, primary expressions
+     * Otherwise we have reached highest level of precedence, call expressions
      * @return Expr, representing Unary
      */
     private Expr unary(){
@@ -353,7 +407,49 @@ public class Parser {
             Expr right = unary();
             return new Expr.Unary(operator, right);
         }
-        return primary();
+        return call();
+    }
+
+    /**
+     * Advances parser collecting argument for given callee
+     * until ) is reached, bundles together and returns a Call expression
+     * @param callee - expression to apply arguments
+     * @return call expression
+     */
+    private Expr finishCall(Expr callee){
+        List<Expr> arguments = new ArrayList<>();
+        if (!check(RIGHT_PAREN)){
+            do {
+                arguments.add(expression());
+            } while (match(COMMA));
+        }
+
+        Token paren = consume(RIGHT_PAREN, "Expect ')' after arguments.");
+
+        return new Expr.Call(callee, paren, arguments);
+    }
+
+    /**
+     * Parses a function call, by first matching a primary expression
+     * and if an opening parentheses is found finishes off the call by extracting arguments
+     * and returning a Call
+     * Otherwise returns just the primary
+     * @return Expr representing a call / primary
+     */
+    private Expr call() {
+        Expr expr = primary();
+
+        while (true) {
+            if (match(LEFT_PAREN)) {
+                expr = finishCall(expr);
+            } else {
+                break;
+            }
+        }
+
+        return expr;
+
+
     }
 
     /**

@@ -36,8 +36,8 @@ public class Interpreter implements Expr.Visitor<Object>,
     private Environment environment = new Environment();
 
     /**
-     * Given a lox expression attempts to evaluate it and display the result
-     * @param expression lox expression to evaluate
+     * Given a series of lox statements attempts to execute them
+     * @param statements lox statements to execute
      */
     void interpret(List<Stmt> statements) {
         try{
