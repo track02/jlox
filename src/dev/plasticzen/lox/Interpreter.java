@@ -28,6 +28,7 @@ package dev.plasticzen.lox;
  */
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class Interpreter implements Expr.Visitor<Object>,
                                     Stmt.Visitor<Void>{
@@ -333,6 +334,26 @@ public class Interpreter implements Expr.Visitor<Object>,
 
         // Unreachable
         return null;
+    }
+
+    /***
+     * Evaluates a function call
+     * Looks up the function name, evaluates arguments expressions
+     * and performs function call returning result
+     * @param expr
+     * @return function call result
+     */
+    @Override
+    public Object visitCallExpr(Expr.Call expr) {
+        Object callee = evaluate(expr.callee);
+
+        List<Object> arguments = new ArrayList<>();
+        for (Expr argument : expr.arguments) {
+            arguments.add(evaluate(argument));
+        }
+
+        LoxCallable function = (LoxCallable)callee;
+        return function.call(this, arguments);
     }
 
 
