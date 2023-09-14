@@ -7,5 +7,6 @@ import java.util.List;
  * I.E user defined functions and class objects
  */
 interface LoxCallable {
+    int arity();
     Object call(Interpreter interpreter, List<Object> arguments);
 }

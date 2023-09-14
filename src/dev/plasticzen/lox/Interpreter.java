@@ -358,6 +358,14 @@ public class Interpreter implements Expr.Visitor<Object>,
         }
 
         LoxCallable function = (LoxCallable)callee;
+
+        // Check arity of function against provided arguments
+        if (arguments.size() != function.arity()) {
+            throw new RuntimeError(expr.paren, "Expected " +
+                    function.arity() + " arguments but got " +
+                    arguments.size() + ".");
+        }
+
         return function.call(this, arguments);
     }
 
